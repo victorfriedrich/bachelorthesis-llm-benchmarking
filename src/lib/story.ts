@@ -21,7 +21,7 @@ export const SHORT_LINKS = [
   { href: "#reruns", label: "Chapters 02–03" },
 ];
 
-export const THESIS_PDF = "/victor-friedrich-bachelor-thesis.pdf";
+export const THESIS_PDF = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/victor-friedrich-bachelor-thesis.pdf`;
 
 /** Footer links. Leave a URL empty to hide that link; fill in thesis PDF, repo and contact when ready. */
 export const LINKS: { label: string; href: string }[] = [

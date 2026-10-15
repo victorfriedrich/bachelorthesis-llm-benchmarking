@@ -8,6 +8,7 @@ import { data } from "@/lib/data";
 export const alt = "Testing an LLM judge when the human labels are biased. Correlation between hostel aspects: guests 0.78, Claude 0.36.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+export const dynamic = "force-static";
 
 const C = data.meta.sevenCities;
 const color = (v: number) => {
