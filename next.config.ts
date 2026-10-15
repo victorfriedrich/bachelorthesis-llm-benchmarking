@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// GitHub Pages serves the site under /thesis-site as static files; Vercel builds stay unchanged.
+// GitHub Pages serves the site under /bachelorthesis-llm-benchmarking as static files; Vercel builds stay unchanged.
 const basePath = process.env.PAGES_BASE_PATH ?? "";
 
 const nextConfig: NextConfig = {

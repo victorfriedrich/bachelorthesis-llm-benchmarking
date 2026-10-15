@@ -27,8 +27,8 @@ jobs:
       - run: npm run build
         env:
           GITHUB_PAGES: "1"
-          PAGES_BASE_PATH: /thesis-site
-          SITE_URL: https://victorfriedrich.github.io/thesis-site
+          PAGES_BASE_PATH: /bachelorthesis-llm-benchmarking
+          SITE_URL: https://victorfriedrich.github.io/bachelorthesis-llm-benchmarking
       - uses: actions/upload-pages-artifact@v3
         with:
           path: out
