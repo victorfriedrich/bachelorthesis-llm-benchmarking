@@ -4,22 +4,7 @@ import { motion, useScroll, useSpring } from "motion/react";
 import { Fragment, useEffect, useState } from "react";
 import { LINKS } from "@/lib/story";
 
-export const CHAPTERS = [
-  { id: "problem", label: "Problem", act: "I" },
-  { id: "method", label: "Method", act: "I" },
-  { id: "agreement", label: "Agreement", act: "II" },
-  { id: "structure", label: "Structure", act: "II" },
-  { id: "direction", label: "Direction", act: "II" },
-  { id: "profiles", label: "Profiles", act: "II" },
-  { id: "prompt", label: "Prompt", act: "III" },
-  { id: "reruns", label: "Reruns", act: "IV" },
-  { id: "evidence", label: "Less text", act: "IV" },
-  { id: "resolution", label: "Resolution", act: "IV" },
-  { id: "scorecard", label: "Summary", act: "" },
-  { id: "lessons", label: "Lessons", act: "builders" },
-];
-
-export function Nav({ chapters = CHAPTERS }: { chapters?: { id: string; label: string; act: string }[] }) {
+export function Nav({ chapters }: { chapters: { id: string; label: string; act: string }[] }) {
   const [active, setActive] = useState("");
   const [theme, setTheme] = useState<"light" | "dark" | null>(null);
   const { scrollYProgress } = useScroll();

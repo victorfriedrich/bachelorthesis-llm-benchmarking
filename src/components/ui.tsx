@@ -7,11 +7,9 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useLayoutEffect,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import { EASE } from "@/lib/tokens";
 
@@ -28,14 +26,6 @@ export function useWidth<T extends HTMLElement>(fallback = 640): [RefObject<T | 
     return () => ro.disconnect();
   }, []);
   return [ref, w];
-}
-
-/* ── client-only: seeded simulations differ in the last float digit between Node and browsers ── */
-
-const noop = () => () => {};
-export function ClientOnly({ children, height }: { children: ReactNode; height: number }) {
-  const mounted = useSyncExternalStore(noop, () => true, () => false);
-  return mounted ? <>{children}</> : <div style={{ height }} />;
 }
 
 /* ── reveal-on-scroll: charts animate once when they enter the viewport ───── */
@@ -249,37 +239,6 @@ export function DataTable({ table }: { table: Table }) {
 
 /* ── chapter section ──────────────────────────────────────────────────────── */
 
-/** Collapsed extra figures: the page stays short, the full analysis stays one click away. */
-export function More({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div>
-      <button onClick={() => setOpen((o) => !o)} aria-expanded={open}
-        className="flex items-center gap-2 rounded-full px-4 py-2 text-[13px] transition-colors"
-        style={{ border: "1px solid var(--hair)", color: open ? "var(--ink)" : "var(--ink-2)", background: open ? "var(--wash)" : "transparent" }}>
-        {open ? "Hide the full analysis" : "Show the full analysis"}<span aria-hidden className="num">{open ? "−" : "+"}</span>
-      </button>
-      {open && <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 sm:gap-6">{children}</div>}
-    </div>
-  );
-}
-
-/** Divider between the four parts of the argument: names the question the next chapters answer. */
-export function Act({ id, n, title, question, range }: { id: string; n: string; title: string; question: string; range: string }) {
-  return (
-    <section id={id} className="mx-auto w-full max-w-[1160px] px-4 pt-16 sm:px-8 sm:pt-24" style={{ scrollMarginTop: 72 }}>
-      <Reveal className="grid gap-4 border-t border-[var(--ink)] pt-8 sm:grid-cols-[120px_1fr] sm:gap-6">
-        <div className="display text-[28px] sm:text-[34px]" style={{ color: "var(--muted)" }}>{n}</div>
-        <div>
-          <div className="eyebrow mb-2">Part {n} · {range.includes("–") ? "Chapters" : "Chapter"} {range}</div>
-          <div className="display text-[30px] sm:text-[40px]">{title}</div>
-          <p className="caption mt-3">{question}</p>
-        </div>
-      </Reveal>
-    </section>
-  );
-}
-
 export function Chapter({
   id,
   n,
@@ -314,29 +273,3 @@ export function Chapter({
   );
 }
 
-/* ── animated number (counts up once in view) ─────────────────────────────── */
-
-export function CountUp({ value, decimals = 0, suffix = "" }: { value: number; decimals?: number; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true });
-  const reduce = useReducedMotion();
-  const [v, setV] = useState(reduce ? value : 0);
-  useEffect(() => {
-    if (!inView || reduce) return;
-    let raf = 0;
-    const t0 = performance.now();
-    const tick = (t: number) => {
-      const k = Math.min(1, (t - t0) / 1400);
-      setV(value * (1 - Math.pow(1 - k, 4)));
-      if (k < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [inView, reduce, value]);
-  return (
-    <span ref={ref}>
-      {v.toFixed(decimals)}
-      {suffix}
-    </span>
-  );
-}

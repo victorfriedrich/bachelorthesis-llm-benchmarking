@@ -1,34 +1,10 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useMemo, useState } from "react";
 import { data, num } from "@/lib/data";
-import { ASPECT_LABEL, COLOR, EASE } from "@/lib/tokens";
-import { Segmented } from "./ui";
+import { EASE } from "@/lib/tokens";
 import { HaloStepper } from "./halo-stepper";
 import { THESIS_PDF } from "@/lib/story";
-
-type Mode = "guests" | "claude" | "deepseek" | "jev";
-const MODE_COLOR: Record<Mode, string> = { guests: COLOR.Human, claude: COLOR.Claude, deepseek: COLOR.DeepSeek, jev: COLOR.Jev };
-const MODE_LABEL: Record<Mode, string> = { guests: "Guests' ratings", claude: "Claude", deepseek: "DeepSeek", jev: "Jev" };
-
-/** Least-squares map from a model's overall score onto the guests' overall score (Section 4.1, calibrated). */
-function calibration(key: "p" | "d" | "j") {
-  const pts = data.ch4.scatter.filter((s) => s[key] != null).map((s) => [s[key] as number, s.h]);
-  const n = pts.length, mx = pts.reduce((a, p) => a + p[0], 0) / n, my = pts.reduce((a, p) => a + p[1], 0) / n;
-  let sxy = 0, sxx = 0;
-  for (const [x, y] of pts) { sxy += (x - mx) * (y - my); sxx += (x - mx) ** 2; }
-  const b = sxy / sxx;
-  return (x: number) => Math.max(0, Math.min(1, my - b * mx + b * x));
-}
-
-const MODE_INTRO: Record<Exclude<Mode, "guests">, string> = {
-  claude: "Claude scored the same hostels from the written reviews.",
-  deepseek: "DeepSeek, a cheaper open model, scored the same reviews.",
-  jev: "Jev, a model that gives probabilities instead of text, scored the same reviews.",
-};
-
-const toDisplay = (x: number) => 2 + 8 * x; // Hostelworld shows ratings on 2–10
 
 export function Hero({ links }: { links?: { href: string; label: string }[] }) {
   const schemaPct = Math.round(num(data.ch4.ablation.find((r) => r.City === "Mean")!, "Schema-awareness share") * 100);
@@ -65,72 +41,6 @@ export function Hero({ links }: { links?: { href: string; label: string }[] }) {
 
       <Findings links={links} />
     </section>
-  );
-}
-
-/** Two typical hostels, scored by guests and by each model: the per-hostel view of the halo. */
-export function HostelCompare() {
-  const [mode, setMode] = useState<Mode>("guests");
-  const cal = useMemo(() => ({ claude: calibration("p"), deepseek: calibration("d"), jev: calibration("j") }), []);
-
-  const aspects = data.meta.aspects;
-  const hostels = data.hero.hostels;
-  const med = data.hero.median;
-  const values = (h: (typeof hostels)[number], m: Mode) =>
-    h.human.map((v, i) => toDisplay(m === "guests" ? v : cal[m](h[m][i])));
-  const spread = (m: Mode) => {
-    const r = hostels.map((h) => { const v = values(h, m); return Math.max(...v) - Math.min(...v); });
-    return r.reduce((a, b) => a + b, 0) / r.length;
-  };
-
-  return (
-    <div>
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <p className="max-w-[500px] text-[15px] leading-relaxed" style={{ color: "var(--ink-2)" }}>
-            {mode === "guests"
-              ? `Two typical ${hostels[0].city} hostels. On Hostelworld, each hostel's seven aspect scores sit within about ${spread("guests").toFixed(1)} points of each other. Switch the source to see what a model reads from the same reviews.`
-              : `${MODE_INTRO[mode]} The seven scores now spread over ${spread(mode).toFixed(1)} points per hostel, ${(spread(mode) / spread("guests")).toFixed(1)} times as much as the guests' scores, so each hostel's weakest aspect stands out.`}
-          </p>
-          <Segmented label="source of the scores" value={mode}
-            onChange={setMode}
-            options={(["guests", "claude", "deepseek", "jev"] as Mode[]).map((m) => ({ value: m, label: MODE_LABEL[m] }))} />
-        </div>
-        <div className="grid gap-5 md:grid-cols-2">
-          {hostels.map((h, hi) => {
-            const vals = values(h, mode);
-            const overall = vals.reduce((a, b) => a + b, 0) / vals.length;
-            return (
-              <div key={h.label} className="card p-6 sm:p-7">
-                <div className="mb-6 flex items-baseline justify-between gap-4">
-                  <div>
-                    <div className="text-[15px] font-medium">{h.label}</div>
-                    <div className="text-[12px]" style={{ color: "var(--muted)" }}>{h.city} · {h.reviews} reviews</div>
-                  </div>
-                  <div className="display num text-[44px]">{overall.toFixed(1)}</div>
-                </div>
-                <div className="grid gap-[11px]">
-                  {aspects.map((a, i) => (
-                    <div key={a} className="grid grid-cols-[96px_1fr_34px] items-center gap-3 text-[13px]">
-                      <span style={{ color: "var(--ink-2)" }}>{ASPECT_LABEL[a]}</span>
-                      <div className="h-[6px] rounded-full" style={{ background: "var(--hair)" }}>
-                        <motion.div className="h-full rounded-full" initial={{ width: 0 }}
-                          animate={{ width: `${((vals[i] - 2) / 8) * 100}%`, backgroundColor: MODE_COLOR[mode] }}
-                          transition={{ duration: 1.1, ease: EASE, delay: 0.04 * i + 0.1 * hi }} />
-                      </div>
-                      <span className="num text-right font-medium">{vals[i].toFixed(1)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <p className="mt-4 max-w-[760px] text-[12px] leading-relaxed" style={{ color: "var(--muted)" }}>
-          Both hostels are typical of the {data.hero.n} studied: close to the median in average guest score ({toDisplay(med.hmean).toFixed(1)})
-          and in how far apart their aspect scores lie (median over all hostels: {(med.hrange * 8).toFixed(1)} points). All three models pick the same weakest aspect for each hostel.
-          Model scores are converted to Hostelworld&apos;s 2–10 scale with a straight-line fit to the guests&apos; scores.
-        </p>
-      </div>
   );
 }
 

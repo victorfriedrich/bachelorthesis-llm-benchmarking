@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { scaleLinear, scaleBand } from "d3-scale";
 import { line as d3line, curveMonotoneX } from "d3-shape";
 import { interpolateLab } from "d3-interpolate";
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { EASE, fmt } from "@/lib/tokens";
 import { TipBox, TipRow, useChartInView, useTip, useWidth } from "./ui";
 
@@ -141,75 +141,6 @@ function RowTip({ row, series, format }: { row: { label: string; values: Record<
   );
 }
 
-/* ═══ Ladder — sources as rows, city dots faint, mean dot strong ═══ */
-
-export function Ladder({
-  rows,
-  domain = [0, 1],
-}: {
-  rows: { key?: string; label: string; sub?: string; color: string; mean: number; cities: { city: string; v: number }[] }[];
-  domain?: [number, number];
-}) {
-  const [ref, w] = useWidth<HTMLDivElement>();
-  const { tip, show, hide, ref: tipRef } = useTip();
-  const { go } = useAnim();
-  const narrow = w < 520;
-  const lw = narrow ? 92 : 132;
-  const x = scaleLinear().domain(domain).range([lw + 10, w - 56]);
-  const rowH = narrow ? 44 : 52;
-  const top = 24;
-  const h = top + rows.length * rowH;
-  const ticks = [0, 0.25, 0.5, 0.75, 1];
-  return (
-    <div ref={ref} className="w-full">
-      <div ref={tipRef} className="relative">
-        <svg width={w} height={h} role="img" aria-label="average inter-item correlation by source">
-          {ticks.map((t) => (
-            <g key={t}>
-              <line x1={x(t)} x2={x(t)} y1={top - 6} y2={h} stroke="var(--hair)" />
-              <text x={x(t)} y={11} textAnchor="middle" className="tick">{t.toFixed(2)}</text>
-            </g>
-          ))}
-          {rows.map((r, i) => {
-            const y = top + i * rowH + rowH / 2;
-            return (
-              <g key={r.key ?? r.label}>
-                <text x={0} y={y + (r.sub ? 0 : 4)} className="label-strong">{r.label}</text>
-                {r.sub && <text x={0} y={y + 15} className="tick">{r.sub}</text>}
-                {r.cities.map((c, j) => (
-                  <motion.circle
-                    key={c.city} cy={y + ((j % 5) - 2) * 2.2} r={3} fill={r.color}
-                    initial={{ cx: x(domain[0]), opacity: 0 }}
-                    animate={go ? { cx: x(c.v), opacity: 0.32 } : undefined}
-                    transition={{ duration: 1.1, ease: EASE, delay: 0.06 * i + 0.01 * j }}
-                    onPointerMove={(e) => show(e, <TipRow color={r.color} label={`${c.city} · ${r.label}`} value={fmt(c.v)} />)}
-                    onPointerLeave={hide}
-                  />
-                ))}
-                <motion.circle
-                  cy={y} r={7.5} fill={r.color} {...ring}
-                  initial={{ cx: x(domain[0]), opacity: 0 }}
-                  animate={go ? { cx: x(r.mean), opacity: 1 } : undefined}
-                  transition={{ duration: 1.1, ease: EASE, delay: 0.06 * i + 0.15 }}
-                />
-                <motion.text
-                  y={y + 4} className="label-strong num" initial={{ opacity: 0 }}
-                  animate={go ? { opacity: 1 } : undefined}
-                  transition={{ delay: 0.06 * i + 0.9 }}
-                  x={w - 4} textAnchor="end"
-                >
-                  {fmt(r.mean)}
-                </motion.text>
-              </g>
-            );
-          })}
-        </svg>
-        <TipBox tip={tip} />
-      </div>
-    </div>
-  );
-}
-
 /* ═══ Scatter — predicted vs human overall, with optional linear calibration ═══ */
 
 export function Scatter({
@@ -330,84 +261,6 @@ export function useCorrColors() {
 export function corrColor(v: number, css: { neg: string; mid: string; pos: string }) {
   const t = Math.max(-1, Math.min(1, v));
   return t < 0 ? interpolateLab(css.mid, css.neg)(-t) : interpolateLab(css.mid, css.pos)(t);
-}
-
-export function Heatmap({
-  matrix,
-  labels,
-  title,
-  colors,
-  cell = 30,
-}: {
-  matrix: number[][] | null;
-  labels: string[];
-  title: string;
-  colors: { neg: string; mid: string; pos: string };
-  cell?: number;
-}) {
-  const { tip, show, hide, ref: tipRef } = useTip();
-  const { go } = useAnim();
-  const [wref, w] = useWidth<HTMLDivElement>(cellMax(cell, labels.length));
-  const n = labels.length;
-  cell = Math.min(cell, Math.floor((w - 4) / n));
-  const size = n * cell;
-  if (!matrix) return <div ref={wref} />;
-  const offDiag: number[] = [];
-  matrix.forEach((row, i) => row.forEach((v, j) => { if (j < i) offDiag.push(v); }));
-  const aiic = offDiag.reduce((s, v) => s + v, 0) / offDiag.length;
-  return (
-    <div ref={wref} className="min-w-0">
-    <div ref={tipRef} className="relative">
-      <div className="mb-2 flex items-baseline justify-between">
-        <span className="text-[13px] font-medium">{title}</span>
-        <span className="text-[12px] num" style={{ color: "var(--muted)" }}>avg. {fmt(aiic)}</span>
-      </div>
-      <svg width={size + 4} height={size + 4} role="img" aria-label={`${title} correlation matrix`}>
-        {matrix.map((row, i) =>
-          row.map((v, j) => {
-            if (j > i) return null;
-            if (i === j)
-              return (
-                <text key={`${i}-${j}`} x={j * cell + cell - 3} y={i * cell + cell / 2 + 4} textAnchor="end" className="tick" style={{ fontSize: cell < 28 ? 9 : 9.5 }}>
-                  {labels[i].slice(0, cell < 28 ? 2 : 5)}
-                </text>
-              );
-            return (
-              <motion.rect
-                key={`${i}-${j}`} x={j * cell + 1} y={i * cell + 1} width={cell - 2} height={cell - 2} rx={5}
-                fill={corrColor(v, colors)}
-                initial={{ opacity: 0, scale: 0.6 }}
-                animate={go ? { opacity: 1, scale: 1 } : undefined}
-                transition={{ duration: 0.6, ease: EASE, delay: (i + j) * 0.03 }}
-                style={{ transformOrigin: `${j * cell + cell / 2}px ${i * cell + cell / 2}px`, transformBox: "view-box" }}
-                tabIndex={0}
-                onPointerMove={(e) => show(e, <TipRow color={corrColor(v, colors)} label={`${labels[i]} × ${labels[j]}`} value={fmt(v)} />)}
-                onPointerLeave={hide}
-                onFocus={(e) => show(e, <TipRow color={corrColor(v, colors)} label={`${labels[i]} × ${labels[j]}`} value={fmt(v)} />)}
-                onBlur={hide}
-              />
-            );
-          }),
-        )}
-      </svg>
-      <TipBox tip={tip} />
-    </div>
-    </div>
-  );
-}
-
-const cellMax = (cell: number, n: number) => cell * n + 4;
-
-export function CorrLegend({ colors }: { colors: { neg: string; mid: string; pos: string } }) {
-  const stops = [-1, -0.5, 0, 0.5, 1];
-  return (
-    <div className="flex items-center gap-3 text-[11px] num" style={{ color: "var(--muted)" }}>
-      <span>−1</span>
-      <div className="h-[8px] w-[160px] rounded-full" style={{ background: `linear-gradient(90deg, ${stops.map((s) => corrColor(s, colors)).join(",")})` }} />
-      <span>+1</span>
-      <span className="ml-1">correlation</span>
-    </div>
-  );
 }
 
 /* ═══ GroupedBars — columns ≤24px, 4px rounded data-end, 2px surface gap ═══ */
@@ -742,12 +595,3 @@ export function DigitStrips({ rows }: { rows: { label: string; group: string; co
   );
 }
 
-export function Stat({ value, label, sub }: { value: ReactNode; label: string; sub?: string }) {
-  return (
-    <div>
-      <div className="display text-[44px] sm:text-[56px]">{value}</div>
-      <div className="mt-2 text-[13px]" style={{ color: "var(--ink-2)" }}>{label}</div>
-      {sub && <div className="text-[12px]" style={{ color: "var(--muted)" }}>{sub}</div>}
-    </div>
-  );
-}

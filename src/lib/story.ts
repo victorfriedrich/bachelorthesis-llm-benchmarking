@@ -1,12 +1,5 @@
-/** The four parts of the argument; each opens with the question its chapters answer. */
-export const ACTS = [
-  { id: "act-1", n: "I", title: "Guest ratings carry a halo", question: "How much does one overall feeling shape all seven scores?", range: "01–02" },
-  { id: "act-2", n: "II", title: "Do scores from the review text avoid it?", question: "Do models reading the reviews keep the aspects apart, in the places where they should differ?", range: "03–06" },
-  { id: "act-3", n: "III", title: "Can the way we ask bring it back?", question: "Which choices in how the model is asked make the aspect scores alike again?", range: "07" },
-  { id: "act-4", n: "IV", title: "Can you trust the number?", question: "How much do scores change between runs and with fewer reviews, and how precise are they?", range: "08–10" },
-] as const;
 
-/** Six-chapter version (/short): nav entries and the hero findings' links. */
+/** Nav entries and the hero findings' links. */
 export const SHORT_CHAPTERS = [
   { id: "agreement", label: "Separation", act: "" },
   { id: "reruns", label: "Limits", act: "" },
