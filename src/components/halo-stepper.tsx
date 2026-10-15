@@ -44,7 +44,7 @@ export function HaloStepper() {
       { key: "Human", pill: "Guests", who: "Guests' ratings", title: "One feeling, seven scores",
         text: `A hostel rated well on one aspect tends to be rated well on all seven. Psychologists call this the halo effect: one overall impression shapes every specific judgment. The clearest sign comes from guests of the same hostel, who all share one address: across ${W.hostels} hostels, guests who rate cleanliness 4 or lower rate the location ${Math.abs(W.buckets[0].locDev).toFixed(1)} points below their hostel's average.` },
       { key: "No-Flat", pill: "Varied scores only", who: "Guests whose scores vary", title: `Remove the ${flatPct}% who gave one number`,
-        text: "Pairs that plausibly belong together barely move. Pairs involving staff or atmosphere become more uncorrelated, and location is almost completely decoupled. Dropping these reviews takes out halo without breaking links that are real, and the remaining reviews indicate how a more discriminating reviewer rates the aspects." },
+        text: "Pairs that plausibly belong together barely move. Pairs involving staff or atmosphere become more uncorrelated, and location is almost completely decoupled. Dropping these reviews takes out halo without breaking links that are real, and the remaining reviews indicate how a more differentiating reviewer rates the aspects." },
       { key: "Joint", pill: "One answer", cond: "Joint" as Cond, who: "Claude · all aspects in one answer", title: "Let a model read the text",
         text: "Location separates completely. Cleanliness, facilities and security stay linked, as they plausibly should." },
       { key: "SchemeLeaks", pill: "One call per aspect", cond: "SchemaLeaks" as Cond, who: "Claude · one call per aspect, schema lists all seven", title: "Ask for one aspect at a time",
@@ -171,6 +171,12 @@ export function HaloStepper() {
           </div>
           {context}
         </motion.div>
+      </div>
+      <div className="mt-8 flex justify-end">
+        <button onClick={() => pick((step + 1) % steps.length)}
+          className="rounded-full px-4 py-2 text-[13px]" style={{ background: "var(--ink)", color: "var(--plane)", border: "1px solid var(--ink)" }}>
+          {step < steps.length - 1 ? `Next: ${steps[step + 1].pill} →` : "Start over ↺"}
+        </button>
       </div>
     </div>
   );

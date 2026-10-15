@@ -48,8 +48,9 @@ export function Hero({ links }: { links?: { href: string; label: string }[] }) {
             Written reviews say more, so an LLM reading them might score each aspect more accurately. This thesis tests that
             across {data.meta.properties} hostels and three models, without treating the guests&apos; scores as the right answer.
             The LLM scores the aspects much more independently than the guests do, in the same pattern as guests who don&apos;t
-            give every aspect the same score. <span style={{ color: "var(--ink)" }}>But how the model is asked matters</span>: even
-            when it rated one aspect per call, just listing all seven aspects in its answer template undid {schemaPct}% of that gain.
+            give every aspect the same score. <span style={{ color: "var(--ink)" }}>But how the model is asked matters</span>: scoring
+            each aspect in its own call makes the scores more independent, yet merely mentioning all seven aspects in the answer
+            template cancelled {schemaPct}% of that improvement.
           </p>
         </div>
         <div className="mt-7 flex flex-wrap gap-3 text-[13px]">
@@ -147,7 +148,7 @@ function Findings({ links }: { links?: { href: string; label: string }[] }) {
     {
       href: "#structure", label: "Chapters 03–06",
       claim: "LLMs tell the aspects apart better than guests do.",
-      body: `Guests' seven scores mostly rise and fall together (correlation ${avg("Human").toFixed(2)}). Claude's scores from the same reviews correlate at ${avg("Predict").toFixed(2)}.`,
+      body: `Guests' seven scores mostly rise and fall together (correlation ${avg("Human").toFixed(2)}). Claude's scores from the same reviews correlate at ${avg("Predict").toFixed(2)}, and the decorrelation follows the pattern of how more differentiating reviewers rate.`,
     },
     {
       href: "#prompt", label: "Chapter 07 · new finding", accent: true,
