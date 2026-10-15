@@ -1,26 +1,222 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  color-scheme: light;
+  --plane: #f6f5f1;
+  --surface: #fbfaf7;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --hair: #e6e4dd;
+  --axis: #c9c7be;
+  --wash: rgba(11, 11, 11, 0.035);
+  --ring: rgba(11, 11, 11, 0.08);
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* identity (validated all-pairs, light surface #fbfaf7) */
+  --claude: #eb6834;
+  --deepseek: #2a78d6;
+  --jev: #1baf7a;
+  --human: #3d3c39;
+  --noflat: #a3a199;
+  --numeric: #52514e;
+  /* ordinal Claude-condition ramp (validated): Joint → SchemaLeaks → Predict → Rate */
+  --c1: #f29a6e;
+  --c2: #eb6834;
+  --c3: #c24e1c;
+  --c4: #8f3710;
+
+  /* diverging correlation scale: blue ↔ gray ↔ red */
+  --div-neg: #256abf;
+  --div-mid: #efeee9;
+  --div-pos: #c43f3e;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --plane: #0d0d0c;
+    --surface: #141413;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #8d8b84;
+    --hair: #262624;
+    --axis: #3a3a37;
+    --wash: rgba(255, 255, 255, 0.05);
+    --ring: rgba(255, 255, 255, 0.1);
+    --claude: #d95926;
+    --deepseek: #3987e5;
+    --jev: #199e70;
+    --human: #e4e2da;
+    --noflat: #7b7972;
+    --numeric: #c3c2b7;
+    --c1: #f29a6e;
+    --c2: #e0662f;
+    --c3: #b8481a;
+    --c4: #8f3710;
+    --div-neg: #3987e5;
+    --div-mid: #2a2a28;
+    --div-pos: #e66767;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --plane: #0d0d0c;
+  --surface: #141413;
+  --ink: #ffffff;
+  --ink-2: #c3c2b7;
+  --muted: #8d8b84;
+  --hair: #262624;
+  --axis: #3a3a37;
+  --wash: rgba(255, 255, 255, 0.05);
+  --ring: rgba(255, 255, 255, 0.1);
+  --claude: #d95926;
+  --deepseek: #3987e5;
+  --jev: #199e70;
+  --human: #e4e2da;
+  --noflat: #7b7972;
+  --numeric: #c3c2b7;
+  --c1: #f29a6e;
+  --c2: #e0662f;
+  --c3: #b8481a;
+  --c4: #8f3710;
+  --div-neg: #3987e5;
+  --div-mid: #2a2a28;
+  --div-pos: #e66767;
 }
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html {
+  background: var(--plane);
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--plane);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--jev) 22%, transparent);
+}
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.display {
+  font-weight: 300;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+.headline {
+  font-weight: 350;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.caption {
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.55;
+  max-width: 34rem;
+}
+
+.card {
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  border-radius: 20px;
+}
+
+.tick {
+  font-size: 11px;
+  fill: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  font-size: 12px;
+  fill: var(--ink-2);
+}
+
+.label-strong {
+  font-size: 12px;
+  fill: var(--ink);
+  font-weight: 500;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--wash);
+  border: 1px solid var(--hair);
+}
+
+.seg button {
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  color: var(--ink-2);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.seg button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px var(--hair);
+}
+
+.seg button:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.tip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 20;
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+  transform: translate(-50%, calc(-100% - 12px));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+figure, figure > div, svg { min-width: 0; }
